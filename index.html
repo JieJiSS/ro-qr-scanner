@@ -13,15 +13,15 @@
     <div id="reader" style="width:500px;height:450px">
     </div>
     <script>
+    const { ipcRenderer } = require("electron");
     $('#reader').html5_qrcode(function (data) {
-        (data);
-       },
-       function(error){
-          //show read errors 
-      }, function(videoError){
-          //the video stream could be opened
-      }
-    );
+         ipcRenderer.send("startFetch", data);
+    }, function(error){
+        //show read errors 
+    }, function(videoError){
+        //the video stream could be opened
+    });
+    ipcRenderer.send("createFood");
     </script>
 </body>
 </html>

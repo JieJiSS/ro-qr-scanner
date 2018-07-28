@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>QRCode Scanner</title>
+    <script src="https://cdn.bootcss.com/jquery/1.9.1/jquery.min.js"></script>
+    <script src="lib/jsqrcode-combined.min.js"></script>
+    <script src="lib/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <div id="reader" style="width:500px;height:450px">
+    </div>
+    <script>
+    $('#reader').html5_qrcode(function (data) {
+        (data);
+       },
+       function(error){
+          //show read errors 
+      }, function(videoError){
+          //the video stream could be opened
+      }
+    );
+    </script>
+</body>
+</html>

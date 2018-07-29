@@ -4,14 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>Query Result</title>
+    <style>
+        #box {
+            text-align: center;
+            font-size: 30px;
+            margin-top: 36px;
+        }
+    </style>
 </head>
 <body>
+    <div id="box"></div>
     <script>
+        const { fetchLunchByUser, fetchBfByUser } = require(__dirname + "/data/lunch.js");
+        const { data, dataBf } = require(__dirname + "/data.js");
+        var div = document.getElementById("box");
         function startFetch(data) {
-            var div = document.createElement("div");
             div.innerText = data;
-            document.body.appendChild(div);
+        }
+        function fetchLaunch(name) {
+            div.innerText = "";
+            var today = new Date().getDate()
+            var res = fetchLunchByUser(name, today);
+            if(res === undefined || res === "No Food") {
+                res = data(name, today);
+            }
+            setTimeout(() => div.innerText = res, 50);
+        }
+        function fetchBf(name) {
+            div.innerText = "";
+            var today = new Date().getDate()
+            var res = fetchBfByUser(name, today);
+            if(res === undefined || res === "No Food") {
+                res = dataBf(name, today);
+            }
+            setTimeout(() => div.innerText = res, 50);
         }
     </script>
 </body>

@@ -9,20 +9,29 @@ let POWERSAFE_BLOCKER_STARTED = false, POWERSAFE_BLOCKER_ID = null;
 
 let win = null, foodWindow = null;
 
+const testURL = url.format({
+    pathname: path.join(__dirname, "/test.html"),
+    protocol: "file:",
+    slashes: true
+});
+
 function createMainWindow () {
     win = null;
     let mainWin = new BrowserWindow({
         width: 600, 
-        height: 500,
+        height: 540,
         background: "#ffffff",
         show: false,
         resizable: false,
+        alwaysOnTop: true,
+        x: 100,
+        y: 200,
     });
     
     mainWin.on("ready-to-show", () => {
         mainWin.show();
         mainWin.focus();
-        
+
         if(IS_DEBUG)
             mainWin.webContents.openDevTools();
     });
@@ -37,6 +46,8 @@ function createMainWindow () {
     
     mainWin.on("closed", () => {
         win = null;
+        foodWindow && foodWindow.close();
+        foodWindow = null;
     });
 
     win = mainWin;
@@ -46,21 +57,25 @@ function createMainWindow () {
 function createFoodWindow() {
     foodWindow = null;
     let index = new BrowserWindow({
-        width: 1024, 
-        height: 768,
+        width: 800, 
+        height: 150,
         background: "white",
         show: true,
         resizable: true,
+        x: 0,
+        y: 0,
     });
 
     index.on("ready-to-show", () => {
         index.focus();
     });
 
-    index.loadURL("http://192.168.3.151:8848/index-food");
+    index.loadURL(testURL || "http://192.168.3.151:8848/index-food");
 
     index.on("closed", () => {
         foodWindow = null;
+        win && win.close();
+        win = null;
     });
 
     foodWindow = index;
@@ -88,7 +103,7 @@ ipcMain.on("createFood", function () {
 let oldData = "", repeatCount = 0;
 ipcMain.on("startFetch", function (_, data) {
     if(foodWindow !== null && data !== oldData) {
-        foodWindow.webContents.executeJavaScript(`alert('${data}')`);
+        foodWindow.webContents.executeJavaScript(`startFetch('${data}')`);
         oldData = data;
     } else {
         repeatCount += 1;
@@ -97,6 +112,15 @@ ipcMain.on("startFetch", function (_, data) {
             repeatCount = 0;
         }
     }
+});
+
+ipcMain.on("fetchLunchByUser", function (_, name) {
+    if(foodWindow !== null)
+        foodWindow.webContents.executeJavaScript(`fetchLaunch("${name}")`);
+});
+ipcMain.on("fetchBfByUser", function (_, name) {
+    if(foodWindow !== null)
+        foodWindow.webContents.executeJavaScript(`fetchBf("${name}")`);
 });
 
 function openPowersafeBlocker() {

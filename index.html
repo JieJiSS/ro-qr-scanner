@@ -4,24 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>QRCode Scanner</title>
+    <title>Food Service Provider</title>
     <script src="https://cdn.bootcss.com/jquery/1.9.1/jquery.min.js"></script>
     <script src="lib/jsqrcode-combined.min.js"></script>
     <script src="lib/html5-qrcode.min.js"></script>
+    <style>
+        code {
+            font-family: Consolas, Menlo, monospace, sans-serif;
+            color: #4294ff;
+            padding: 2px 5px;
+            background: #ddd;
+            border-radius: 5px;
+        }
+        #reader {
+            position: relative;
+            left: calc(50% - 250px);
+        }
+    </style>
 </head>
 <body>
+    <!--请连接至Wi-Fi: <code>Friendship Hotel</code>（注意大小写）。<br />
+    将二维码正对摄像头，距离5-10cm为佳。
     <div id="reader" style="width:500px;height:450px">
+    </div>-->
+    <div id="reader">
+        由于推演、新闻中涉及较多关键词，导致ROMUN服务器被墙（。<br>
+        并且原先的扫码订餐系统在被墙的服务器上<br>
+        所以只好先用这个将就一下，技术组会尽快将服务器救出来（逃<br><br>
+        
+        请输入取餐人姓名拼音的首字母：（如潘瑞哲->prz），<br>并点击可选列表中相应的名字。<br>
+        <input type="text" id="firstLetter"><br>
+        可选列表：
+        <ul id="delegate"></ul>
     </div>
     <script>
     const { ipcRenderer } = require("electron");
-    $('#reader').html5_qrcode(function (data) {
+    const py2name = require(__dirname + "/data/py2name.json");
+    function fetchNameArrByPY(pinyin) {
+        if(pinyin === "") return [];
+        var keys = Object.keys(py2name), rArr = [];
+        for(let i = 0; i < keys.length; i++) {
+            key = keys[i];
+            if(key.startsWith(pinyin))
+                rArr = rArr.concat(py2name[key]);
+        };
+        return rArr;
+    }
+    /*$('#reader').html5_qrcode(function (data) {
          ipcRenderer.send("startFetch", data);
     }, function(error){
         //show read errors 
     }, function(videoError){
         //the video stream could be opened
+    });*/
+    setTimeout(() => ipcRenderer.send("createFood"), 1000);
+    document.getElementById("firstLetter").addEventListener("keyup", function () {
+        const val = document.getElementById("firstLetter").value;
+        const ul = document.getElementById("delegate");
+        ul.innerHTML = "";
+        const list = fetchNameArrByPY(val).sort();
+        list.forEach(name => {
+            var li = document.createElement("li");
+            li.innerText = name;
+            li.addEventListener("click", function () {
+                if(new Date().getHours() <= 9)
+                    ipcRenderer.send("fetchBfByUser", name);
+                else
+                    ipcRenderer.send("fetchLunchByUser", name);
+                li.style.color = "#4294ff";
+                setTimeout(() => li.style.color = "black", 200);
+            });
+            li.style.cursor = "pointer";
+            ul.appendChild(li);
+        });
     });
-    ipcRenderer.send("createFood");
     </script>
 </body>
 </html>

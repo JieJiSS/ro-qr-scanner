@@ -15,11 +15,7 @@
   "scripts": {
     "test": "exit 0"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dwa012/html5-qrcode.git"
-  },
-  "author": "",
+  "author": "JieJiSS",
   "license": "GPLv3",
   "dependencies": {
     "node-pinyin": "^0.2.3"

@@ -18,26 +18,73 @@
         }
         #reader {
             position: relative;
-            left: calc(50% - 250px);
+            left: calc(50% - 210px);
+        }
+        code.plain {
+            font-family: 'Courier New', Courier, monospace, sans-serif;
+            background: white;
+            padding: initial;
+            border-radius: 0;
+            color: black;
+        }
+        #app {
+            margin: 5px;
+        }
+        .ml2em {
+            margin-left: 2em;
+        }
+        .btn {
+            display: inline-block;
+            height: 21px;
+            width: 80px;
         }
     </style>
 </head>
 <body>
-    <!--请连接至Wi-Fi: <code>Friendship Hotel</code>（注意大小写）。<br />
-    将二维码正对摄像头，距离5-10cm为佳。
-    <div id="reader" style="width:500px;height:450px">
-    </div>-->
-    <div id="reader">
-        由于推演、新闻中涉及较多关键词，导致ROMUN服务器被墙（。<br>
-        并且原先的扫码订餐系统在被墙的服务器上<br>
-        所以只好先用这个将就一下，技术组会尽快将服务器救出来（逃<br><br>
-        
-        请输入取餐人姓名拼音的首字母：（如潘瑞哲->prz），<br>并点击可选列表中相应的名字。<br>
-        <input type="text" id="firstLetter"><br>
-        可选列表：
+    <div id="cameraTip" style="display: none;">请将二维码置于摄像头前3-5cm处进行扫描！</div>
+    <div id="reader" style="display:none;width:420px;height:360px">
+    </div>
+    <div id="app">
+        连接服务器 - 配置：<br><br>
+        <code class="plain ml2em">Server IP.: </code><input type="text" id="ip" value="192.168.3.46"><br>
+        <code class="plain ml2em">Meal ID...: </code><input type="number" id="day" value="4"><br><br>
+        <button class="btn" onclick="update();">保存设置</button>
+        <button class="btn" onclick="openCamera();" id="openCameraBtn">使用摄像头</button>
+        <button class="btn" onclick="closeCamera();" style="display:none;" id="closeCameraBtn">关闭摄像头</button>
+        <br><hr><br>
+
+        请输入取餐人姓名拼音的首字母：（如潘瑞哲 <code class="plain">--&gt; prz</code>），<br>
+        并点击候选列表中符合的名字。<br>
+        姓名拼音首字母：<input type="text" id="firstLetter"><br><br>
+        候选列表：
         <ul id="delegate"></ul>
     </div>
     <script>
+
+        function openCamera () {
+            $("#cameraTip").show();
+            $("#closeCameraBtn").show();
+            $("#openCameraBtn").hide();
+            $('#reader').show().html5_qrcode(function (data) {
+                if(!initialized) {
+                    if(!update()) {
+                        return;
+                    }
+                }
+                ipcRenderer.send("startFetch", data);
+            }, function(error){
+                //show read errors 
+            }, function(videoError){
+                //the video stream could be opened
+            });
+        }
+        function closeCamera () {
+            $("#cameraTip").hide();
+            $("#closeCameraBtn").hide();
+            $("#openCameraBtn").show();
+            $('#reader').hide().html5_qrcode_stop().html("");
+        }
+    let initialized = false;
     const { ipcRenderer } = require("electron");
     const py2name = require(__dirname + "/data/py2name.json");
     function fetchNameArrByPY(pinyin) {
@@ -50,23 +97,22 @@
         };
         return rArr;
     }
-    /*$('#reader').html5_qrcode(function (data) {
-         ipcRenderer.send("startFetch", data);
-    }, function(error){
-        //show read errors 
-    }, function(videoError){
-        //the video stream could be opened
-    });*/
     setTimeout(() => ipcRenderer.send("createFood"), 1000);
-    document.getElementById("firstLetter").addEventListener("keyup", function () {
-        const val = document.getElementById("firstLetter").value;
+    document.getElementById("firstLetter").addEventListener("keyup", function (ev) {
         const ul = document.getElementById("delegate");
+        if(ev.keyCode === 13) {
+            ev.preventDefault();
+            ul.firstChild.click();
+            return;
+        }
+        const val = document.getElementById("firstLetter").value;
         ul.innerHTML = "";
-        const list = fetchNameArrByPY(val).sort();
-        list.forEach(name => {
+        const list = Array.from(new Set(fetchNameArrByPY(val)).values()).sort();
+        list.forEach((name, index) => {
             var li = document.createElement("li");
             li.innerText = name;
             li.addEventListener("click", function () {
+                if(!initialized) update();
                 if(new Date().getHours() <= 9)
                     ipcRenderer.send("fetchBfByUser", name);
                 else
@@ -78,6 +124,21 @@
             ul.appendChild(li);
         });
     });
+
+    function update() {
+        var ip = String(document.getElementById("ip").value).trim();
+        var meal = Number(document.getElementById("day").value);
+        if(!ip.startsWith("192.168.")) {
+            if(!confirm("Are you sure? IP should be like 192.168.x.x")) return;
+        } else if(!Number.isInteger(meal) || meal < 0) {
+            return alert("Meal Number should be an non-negative integer!");
+        }
+        initialized = true;
+        ipcRenderer.send("updateIP", ip);
+        ipcRenderer.send("updateDay", meal);
+        return true;
+    }
+
     </script>
 </body>
 </html>

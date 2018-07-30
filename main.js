@@ -9,6 +9,8 @@ let POWERSAFE_BLOCKER_STARTED = false, POWERSAFE_BLOCKER_ID = null;
 
 let win = null, foodWindow = null;
 
+let mainSet = new Set([]);
+
 const testURL = url.format({
     pathname: path.join(__dirname, "/test.html"),
     protocol: "file:",
@@ -18,14 +20,14 @@ const testURL = url.format({
 function createMainWindow () {
     win = null;
     let mainWin = new BrowserWindow({
-        width: 600, 
+        width: 520,
         height: 540,
         background: "#ffffff",
         show: false,
         resizable: false,
         alwaysOnTop: true,
-        x: 100,
-        y: 200,
+        x: 0,
+        y: 100,
     });
     
     mainWin.on("ready-to-show", () => {
@@ -57,17 +59,18 @@ function createMainWindow () {
 function createFoodWindow() {
     foodWindow = null;
     let index = new BrowserWindow({
-        width: 800, 
-        height: 150,
+        width: 290, 
+        height: 600,
         background: "white",
         show: true,
         resizable: true,
-        x: 0,
+        x: 1100,
         y: 0,
     });
 
-    index.on("ready-to-show", () => {
-        index.focus();
+    index.webContents.on("dom-ready", () => {
+        if(process.argv.includes("--debug"))
+            index.webContents.executeJavaScript("debug()");
     });
 
     index.loadURL(testURL || "http://192.168.3.151:8848/index-food");
@@ -96,8 +99,18 @@ app.on("activate", () => {
     }
 });
 
+ipcMain.on("updateIP", function (_, ip) {
+    if(foodWindow !== null)
+        foodWindow.webContents.executeJavaScript(`updateIP("${ip}")`);
+});
+ipcMain.on("updateDay", function (_, d) {
+    if(foodWindow !== null)
+        foodWindow.webContents.executeJavaScript(`updateDay(${d})`);
+})
+
 ipcMain.on("createFood", function () {
-    createFoodWindow();
+    if (foodWindow === null)
+        createFoodWindow();
 });
 
 let oldData = "", repeatCount = 0;
@@ -115,12 +128,22 @@ ipcMain.on("startFetch", function (_, data) {
 });
 
 ipcMain.on("fetchLunchByUser", function (_, name) {
+    let status = false;
+    if(mainSet.has(name))
+        status = true;
+    else
+        mainSet.add(name);
     if(foodWindow !== null)
-        foodWindow.webContents.executeJavaScript(`fetchLaunch("${name}")`);
+        foodWindow.webContents.executeJavaScript(`fetchLunch("${name}", ${status})`);
 });
 ipcMain.on("fetchBfByUser", function (_, name) {
+    let status = false;
+    if(mainSet.has(name))
+        status = true;
+    else
+        mainSet.add(name);
     if(foodWindow !== null)
-        foodWindow.webContents.executeJavaScript(`fetchBf("${name}")`);
+        foodWindow.webContents.executeJavaScript(`fetchBf("${name}", ${status})`);
 });
 
 function openPowersafeBlocker() {

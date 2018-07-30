@@ -1,5 +1,7 @@
 const { readFileSync, writeFileSync } = require("fs");
 
+const name2id = require("./name2id.json");
+
 const lu_arr = readFileSync(__dirname + "/lunch.txt").toString().trim().split("\n");
 const bf_arr = readFileSync(__dirname + "/bf.txt").toString().trim().split("\n");
 
@@ -51,7 +53,7 @@ function fetchBfByUser (fullname, day = 29) {
                 const anchor = (day - 29) * 6;
                 const lunch_today = food_arr.slice(anchor, anchor + 6);
                 for (let i = 0; i < lunch_today.length; i++) {
-                    if (lunch_today[i] === "1") {
+                    if (lunch_today[i] !== "0") {
                         return bin2bftype[i];
                     }
                 }
@@ -61,12 +63,13 @@ function fetchBfByUser (fullname, day = 29) {
     };
 }
 
-function fetchLunchByID (id) {
-    return "Not implemented yet";
+function getIDByName (name) {
+    return name2id[name] || "";
 }
 
 module.exports = exports = {
     fetchLunchByUser,
     fetchBfByUser,
-    fetchLunchByID,
+    //fetchLunchByID,
+    getIDByName,
 };

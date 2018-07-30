@@ -541,7 +541,7 @@ Liu xiaoyi	No order
 王涵悦	No order
 李畋汐	No order
 杨宇轩	No order
-法德楷	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	2
+法德楷	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	1
 李政昭	No order
 周诗童	No order
 张子腾	No order

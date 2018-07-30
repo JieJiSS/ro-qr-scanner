@@ -16,29 +16,117 @@
 <body>
     <div id="box"></div>
     <script>
-        const { fetchLunchByUser, fetchBfByUser } = require(__dirname + "/data/lunch.js");
+        let IP = "", IS_DEBUG = false, day;
+        const { fetchLunchByUser, fetchBfByUser, getIDByName } = require(__dirname + "/data/lunch.js");
         const { data, dataBf } = require(__dirname + "/data.js");
         var div = document.getElementById("box");
+        var offline = false;
         function startFetch(data) {
-            div.innerText = data;
+            fetch("http://" + IP + ":8848/food/" + day + "/" + data).then(
+                r => r.json()
+            ).then(json => {
+                const obj = json;
+                var prefix = "";
+                if(obj.registered === true) {
+                    prefix = "已取餐！";
+                }
+                var res = (obj.data && obj.data.food && obj.data.food[day]) || "No Record";
+                prefix += (obj.data && obj.data.name + " - ");
+
+                var speakStr = res.replace(/(-|麦当劳|吉野家|20元)/g, " ").replace(/汉堡/g, "堡");
+                setTimeout(() => {
+                    div.innerText = prefix + res;
+                    if(!obj.registered)
+                        voice(speakStr);
+                    else {
+                        if(IS_DEBUG === true) {
+                            voice(speakStr);
+                        } else {
+                            voice("您已取餐");
+                        }
+                    }
+                }, 50);
+            });
         }
-        function fetchLaunch(name) {
+        function fetchLunch(name, status) {
             div.innerText = "";
-            var today = new Date().getDate()
+            var prefix = status ? "已取餐！" : "";
+            var today = new Date().getDate();
             var res = fetchLunchByUser(name, today);
             if(res === undefined || res === "No Food") {
                 res = data(name, today);
             }
-            setTimeout(() => div.innerText = res, 50);
+            fetchFromServer(name).then(r => r.json()).then(json => {
+                const obj = json;
+                if(obj.registered === true) {
+                    if(!status) {
+                        prefix = "已取餐！";
+                    }
+                }
+                setTimeout(() => div.innerText = prefix + res, 50);
+            });
         }
-        function fetchBf(name) {
+        function fetchBf(name, status) {
             div.innerText = "";
-            var today = new Date().getDate()
-            var res = fetchBfByUser(name, today);
+            var prefix = status ? "已取餐！" : "";
+            var today = new Date().getDate();
+            var res = fetchLunchByUser(name, today);
             if(res === undefined || res === "No Food") {
                 res = dataBf(name, today);
             }
-            setTimeout(() => div.innerText = res, 50);
+            fetchFromServer(name).then(r => r.json()).then(json => {
+                const obj = json;
+                if(obj.registered === true) {
+                    if(!status) {
+                        prefix = "已取餐！";
+                    }
+                }
+                setTimeout(() => div.innerText = prefix + res, 50);
+            });
+        }
+
+        function fetchFromServer(name) {
+            if(!IP) {
+                offline = offline || confirm("未设置服务器IP！是否希望使用离线查阅模式？\n\n*在该模式下将无法同步查阅结果。");
+                if(offline === true) {
+                    return new Promise(res => {
+                        res({json: function () {
+                            return new Promise(res => res({"registered":false}));
+                        }});
+                    });
+                } else {
+                    return;
+                }
+            }
+            return fetch("http://" + IP + ":8848/food/" + day + "/" + getIDByName(name));
+        }
+
+        function updateIP(ip) {
+            IP = ip;
+        }
+        function updateDay(d) {
+            day = d;
+        }
+        
+        const { exec } = require("child_process");
+        const no_record_timeout = 800, handler = null;
+        function voice(sentence) {
+            if(sentence.toLowerCase().trim() === "no record") {
+                if(handler !== null) clearTimeout(handler);
+                handler = setTimeout(() => {
+                    voice(sentence);
+                }, no_record_timeout);
+            } else if(handler !== null) {
+                clearTimeout(handler);
+                handler = null;
+            }
+            if(process.platform === "darwin") {
+                exec("say \"" + sentence.replace(/"/g, "") + "\"");
+            }
+        }
+
+        function debug() {
+            IS_DEBUG = true;
         }
     </script>
 </body>

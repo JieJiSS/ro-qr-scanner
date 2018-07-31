@@ -1,6 +1,7 @@
 const { readFileSync, writeFileSync } = require("fs");
 
 const name2id = require("./name2id.json");
+const id2name = require("./id2name.json");
 
 const lu_arr = readFileSync(__dirname + "/lunch.txt").toString().trim().split("\n");
 const bf_arr = readFileSync(__dirname + "/bf.txt").toString().trim().split("\n");
@@ -20,6 +21,7 @@ const bin2bftype = ["芝士火腿串点醒晨餐-吉野家",
 ];
 
 function fetchLunchByUser (fullname, day = 29) {
+    alert("fetchLunchByUser@lunch.js");
     for(let j = 0; j < lu_arr.length; j++) {
         lu_str = lu_arr[j];
         const arr = lu_str.split("\t").map(str => str.trim());
@@ -51,9 +53,9 @@ function fetchBfByUser (fullname, day = 29) {
             } else {
                 const food_arr = arr.slice(1);
                 const anchor = (day - 29) * 6;
-                const lunch_today = food_arr.slice(anchor, anchor + 6);
-                for (let i = 0; i < lunch_today.length; i++) {
-                    if (lunch_today[i] !== "0") {
+                const bf_today = food_arr.slice(anchor, anchor + 6);
+                for (let i = 0; i < bf_today.length; i++) {
+                    if (bf_today[i] !== "0") {
                         return bin2bftype[i];
                     }
                 }
@@ -67,9 +69,14 @@ function getIDByName (name) {
     return name2id[name] || "";
 }
 
+function getNameByID (id) {
+    return id2name[id] || "";
+}
+
 module.exports = exports = {
     fetchLunchByUser,
     fetchBfByUser,
     //fetchLunchByID,
     getIDByName,
+    getNameByID,
 };

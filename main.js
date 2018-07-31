@@ -128,6 +128,7 @@ ipcMain.on("startFetch", function (_, data) {
 });
 
 ipcMain.on("fetchLunchByUser", function (_, name) {
+    console.log("LU!");
     let status = false;
     if(mainSet.has(name))
         status = true;

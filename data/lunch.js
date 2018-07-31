@@ -21,7 +21,7 @@ const bin2bftype = ["芝士火腿串点醒晨餐-吉野家",
 ];
 
 function fetchLunchByUser (fullname, day = 29) {
-    alert("fetchLunchByUser@lunch.js");
+    // alert("fetchLunchByUser@lunch.js");
     for(let j = 0; j < lu_arr.length; j++) {
         lu_str = lu_arr[j];
         const arr = lu_str.split("\t").map(str => str.trim());
